@@ -4,6 +4,9 @@ import SwiftUI
 struct TableView: View {
   @Environment(\.theme.table) private var table
   @Environment(\.tableBorderStyle.strokeStyle.lineWidth) private var borderWidth
+    
+    @State
+        private var scrollViewContentSize: CGSize = .zero
 
   private let columnAlignments: [RawTableColumnAlignment]
   private let rows: [RawTableRow]
@@ -23,23 +26,44 @@ struct TableView: View {
   }
 
   private var label: some View {
-    Grid(horizontalSpacing: self.borderWidth, verticalSpacing: self.borderWidth) {
-      ForEach(0..<self.rowCount, id: \.self) { row in
-        GridRow {
-          ForEach(0..<self.columnCount, id: \.self) { column in
-            TableCell(row: row, column: column, cell: self.rows[row].cells[column])
-              .gridColumnAlignment(.init(self.columnAlignments[column]))
+      
+      ScrollView(.horizontal) {
+          VStack(alignment: .leading, spacing: self.borderWidth) {
+              ForEach(0..<self.rowCount, id: \.self) { row in
+                  HStack(spacing: self.borderWidth) {
+                      ForEach(0..<self.columnCount, id: \.self) { column in
+                          TableCell(row: row, column: column, cell: self.rows[row].cells[column])
+                              .frame(width: 140, alignment: .leading)
+                      }
+                  }
+              }
           }
-        }
+          .frame(maxHeight: .infinity)
+          .tableDecoration(
+            rowCount: self.rowCount,
+            columnCount: self.columnCount,
+            background: TableBackgroundView.init,
+            overlay: TableBorderView.init
+          )
       }
-    }
-    .padding(self.borderWidth)
-    .tableDecoration(
-      rowCount: self.rowCount,
-      columnCount: self.columnCount,
-      background: TableBackgroundView.init,
-      overlay: TableBorderView.init
-    )
+    
+//      Grid(horizontalSpacing: self.borderWidth, verticalSpacing: self.borderWidth) {
+//          ForEach(0..<self.rowCount, id: \.self) { row in
+//              GridRow {
+//                  ForEach(0..<self.columnCount, id: \.self) { column in
+//                      TableCell(row: row, column: column, cell: self.rows[row].cells[column])
+//                          .gridColumnAlignment(.init(self.columnAlignments[column]))
+//                  }
+//              }
+//          }
+//      }
+//      .padding(self.borderWidth)
+//      .tableDecoration(
+//        rowCount: self.rowCount,
+//        columnCount: self.columnCount,
+//        background: TableBackgroundView.init,
+//        overlay: TableBorderView.init
+//      )
   }
 
   private var rowCount: Int {
