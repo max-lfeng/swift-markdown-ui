@@ -233,11 +233,11 @@ extension UnsafeNode {
 
     let extensionNames: Set<String>
 
-    if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
+//    if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
       extensionNames = ["autolink", "strikethrough", "tagfilter", "tasklist", "table"]
-    } else {
-      extensionNames = ["autolink", "strikethrough", "tagfilter", "tasklist"]
-    }
+//    } else {
+//      extensionNames = ["autolink", "strikethrough", "tagfilter", "tasklist"]
+//    }
 
     for extensionName in extensionNames {
       guard let syntaxExtension = cmark_find_syntax_extension(extensionName) else {
