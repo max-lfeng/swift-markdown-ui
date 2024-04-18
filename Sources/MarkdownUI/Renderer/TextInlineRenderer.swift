@@ -98,14 +98,17 @@ private struct TextInlineRenderer {
   }
 
   private mutating func defaultRender(_ inline: InlineNode) {
-    self.result =
-      self.result
-      + Text(
-        inline.renderAttributedString(
-          baseURL: self.baseURL,
-          textStyles: self.textStyles,
-          attributes: self.attributes
-        )
-      )
+//    self.result =
+//      self.result
+//      + Text(
+//        inline.renderAttributedString(
+//          baseURL: self.baseURL,
+//          textStyles: self.textStyles,
+//          attributes: self.attributes
+//        )
+//      )
+      self.result = self.result + inline.renderAttributedString(baseURL: self.baseURL,
+                                                                textStyles: self.textStyles,
+                                                                attributes: self.attributes)
   }
 }
