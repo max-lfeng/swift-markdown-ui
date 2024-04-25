@@ -129,7 +129,7 @@ private struct AttributedStringInlineRenderer {
                     let lineHeight = fontSize * 1.5 // assume it's CJK environment
 
                     let backgroundColor = UIColor(Color(rgba: 0x5D5E67FF))
-                    let backgroundSize = CGSize(width: fontSize, height: fontSize) // 背景大小
+                    let backgroundSize = CGSize(width: fontSize + 2, height: fontSize) // 背景大小
                     let circleSize = CGSize(width: min(16, lineHeight), height: min(16, lineHeight)) // 背景大小
                     UIGraphicsBeginImageContextWithOptions(backgroundSize, false, 0)
 
@@ -163,6 +163,7 @@ private struct AttributedStringInlineRenderer {
                         }
                         self.renderResult = self.renderResult + Text(Image(uiImage: backgroundImage))
                             .baselineOffset((16 - lineHeight) / 4)
+                            .tracking(2)
                     }
                 } else {
                     var attributeStr = AttributedString(substring, attributes: self.attributes).resolvingFonts()
