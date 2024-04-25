@@ -87,11 +87,17 @@ private struct AttributedStringInlineRenderer {
         if self.shouldRenderReferenceNumber {
             self.shouldRenderReferenceNumber = false
             
-            // Define a regular expression pattern to match the text within 【】
-            let pattern = #"【(\d+)】"#
-
+            // Define a regular expression pattern to match the text within 【】&& [^x^]
+            let patternAll = #"【(\d+)】| \[\^(\d+)\^\]"#
+            // 【x】
+            let pattern1 = #"【(\d+)】"#
+            // [^x^]
+            let pattern2 = #"\[\^(\d+)\^\]"#
+            
             // Create a regular expression object
-            let regex = try! NSRegularExpression(pattern: pattern, options: [])
+            let regex = try! NSRegularExpression(pattern: patternAll, options: [])
+            let regex1 = try! NSRegularExpression(pattern: pattern1, options: [])
+            let regex2 = try! NSRegularExpression(pattern: pattern2, options: [])
 
             // Find all matches in the text
             let matches = regex.matches(in: text, options: [], range: NSRange(text.startIndex..., in: text))
@@ -123,47 +129,53 @@ private struct AttributedStringInlineRenderer {
             
             for substring in substrings {
                 if let match = regex.firstMatch(in: substring, options: [], range: NSRange(substring.startIndex..., in: substring)) {
-                    var modifiedText = regex.stringByReplacingMatches(in: substring, options: [], range: NSRange(location: 0, length: substring.utf16.count), withTemplate: "$1")
+                    var modifiedText = ""
+                    if let match = regex1.firstMatch(in: substring, options: [], range: NSRange(substring.startIndex..., in: substring)) {
+                        modifiedText = regex.stringByReplacingMatches(in: substring, options: [], range: NSRange(location: 0, length: substring.utf16.count), withTemplate: "$1")
+                    } else if let match = regex2.firstMatch(in: substring, options: [], range: NSRange(substring.startIndex..., in: substring)) {
+                        modifiedText = regex.stringByReplacingMatches(in: substring, options: [], range: NSRange(location: 0, length: substring.utf16.count), withTemplate: "$2")
+                    }
+                    if !modifiedText.isEmpty {
+                        let fontSize = self.attributes.fontProperties?.size ?? 16
+                        let lineHeight = fontSize * 1.5 // assume it's CJK environment
 
-                    let fontSize = self.attributes.fontProperties?.size ?? 16
-                    let lineHeight = fontSize * 1.5 // assume it's CJK environment
+                        let backgroundColor = UIColor(Color(rgba: 0x5D5E67FF))
+                        let backgroundSize = CGSize(width: fontSize + 2, height: fontSize) // 背景大小
+                        let circleSize = CGSize(width: min(16, lineHeight), height: min(16, lineHeight)) // 背景大小
+                        UIGraphicsBeginImageContextWithOptions(backgroundSize, false, 0)
 
-                    let backgroundColor = UIColor(Color(rgba: 0x5D5E67FF))
-                    let backgroundSize = CGSize(width: fontSize + 2, height: fontSize) // 背景大小
-                    let circleSize = CGSize(width: min(16, lineHeight), height: min(16, lineHeight)) // 背景大小
-                    UIGraphicsBeginImageContextWithOptions(backgroundSize, false, 0)
+                        let backgroundRect = CGRect(origin: CGPoint(x: (backgroundSize.width - circleSize.width) / 2, y: (backgroundSize.height - circleSize.height) / 2), size: circleSize)
+                        let cornerRadius: CGFloat = circleSize.height / 2 // 圆角大小
+                        let path = UIBezierPath(roundedRect: backgroundRect, cornerRadius: cornerRadius)
+                        backgroundColor.setFill()
+                        path.fill()
 
-                    let backgroundRect = CGRect(origin: CGPoint(x: (backgroundSize.width - circleSize.width) / 2, y: (backgroundSize.height - circleSize.height) / 2), size: circleSize)
-                    let cornerRadius: CGFloat = circleSize.height / 2 // 圆角大小
-                    let path = UIBezierPath(roundedRect: backgroundRect, cornerRadius: cornerRadius)
-                    backgroundColor.setFill()
-                    path.fill()
-
-                    let paragraphStyle = NSMutableParagraphStyle()
-                    paragraphStyle.alignment = .center
-                    let font = UIFont.systemFont(ofSize: 12)
-                    let text_h = font.lineHeight
-                    let text_y = (circleSize.height - text_h) / 2
-                    let text_rect = CGRect(x: backgroundRect.origin.x, y: text_y + backgroundRect.origin.y, width: circleSize.width, height: text_h)
-                    
-                    modifiedText.draw(in: text_rect, withAttributes: [.font: font, .foregroundColor: UIColor(Color.white.opacity(0.8)), .paragraphStyle: paragraphStyle])
-                    
-                    let backgroundImage = UIGraphicsGetImageFromCurrentImageContext()
-                    UIGraphicsEndImageContext()
-                    
-                    if var backgroundImage = backgroundImage {
-                        if #unavailable(iOS 16.0) {
-                            let baselineOffset = (16 - lineHeight) / 4
-                            let newSize = CGSize(width: backgroundImage.size.width + abs(baselineOffset), height: backgroundImage.size.height)
-                            UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
-                            backgroundImage.draw(in: CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height))
-                            let newImage = UIGraphicsGetImageFromCurrentImageContext() ?? backgroundImage
-                            UIGraphicsEndImageContext()
-                            backgroundImage = newImage
+                        let paragraphStyle = NSMutableParagraphStyle()
+                        paragraphStyle.alignment = .center
+                        let font = UIFont.systemFont(ofSize: 12)
+                        let text_h = font.lineHeight
+                        let text_y = (circleSize.height - text_h) / 2
+                        let text_rect = CGRect(x: backgroundRect.origin.x, y: text_y + backgroundRect.origin.y, width: circleSize.width, height: text_h)
+                        
+                        modifiedText.draw(in: text_rect, withAttributes: [.font: font, .foregroundColor: UIColor(Color.white.opacity(0.8)), .paragraphStyle: paragraphStyle])
+                        
+                        let backgroundImage = UIGraphicsGetImageFromCurrentImageContext()
+                        UIGraphicsEndImageContext()
+                        
+                        if var backgroundImage = backgroundImage {
+                            if #unavailable(iOS 16.0) {
+                                let baselineOffset = (16 - lineHeight) / 4
+                                let newSize = CGSize(width: backgroundImage.size.width + abs(baselineOffset), height: backgroundImage.size.height)
+                                UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
+                                backgroundImage.draw(in: CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height))
+                                let newImage = UIGraphicsGetImageFromCurrentImageContext() ?? backgroundImage
+                                UIGraphicsEndImageContext()
+                                backgroundImage = newImage
+                            }
+                            self.renderResult = self.renderResult + Text(Image(uiImage: backgroundImage))
+                                .baselineOffset((16 - lineHeight) / 4)
+                                .tracking(2)
                         }
-                        self.renderResult = self.renderResult + Text(Image(uiImage: backgroundImage))
-                            .baselineOffset((16 - lineHeight) / 4)
-                            .tracking(2)
                     }
                 } else {
                     var attributeStr = AttributedString(substring, attributes: self.attributes).resolvingFonts()
