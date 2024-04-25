@@ -139,7 +139,9 @@ private struct AttributedStringInlineRenderer {
                         let fontSize = self.attributes.fontProperties?.size ?? 16
                         let lineHeight = fontSize * 1.5 // assume it's CJK environment
 
-                        let backgroundColor = UIColor(Color(rgba: 0x5D5E67FF))
+                        let color = attributes.quoteProperties?.quoteBackground ?? Color(rgba: 0x5D5E67FF)
+                        let backgroundColor = UIColor(color)
+//                        let backgroundColor = UIColor(Color(rgba: 0x5D5E67FF))
                         let backgroundSize = CGSize(width: fontSize + 2, height: fontSize) // 背景大小
                         let circleSize = CGSize(width: min(16, lineHeight), height: min(16, lineHeight)) // 背景大小
                         UIGraphicsBeginImageContextWithOptions(backgroundSize, false, 0)

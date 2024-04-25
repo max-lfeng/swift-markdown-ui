@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum FontPropertiesAttribute: AttributedStringKey {
   typealias Value = FontProperties
@@ -13,6 +14,7 @@ extension AttributeScopes {
   struct MarkdownUIAttributes: AttributeScope {
     let swiftUI: SwiftUIAttributes
     let fontProperties: FontPropertiesAttribute
+    let quoteProperties: QuotePropertiesAttribute
   }
 }
 
@@ -37,5 +39,26 @@ extension AttributedString {
     }
 
     return output
+  }
+}
+
+
+enum QuotePropertiesAttribute: AttributedStringKey {
+    
+  typealias Value = QuoteProperties
+  static let name = "quoteProperties"
+}
+
+public struct QuoteProperties: Hashable {
+    public var quoteBackground: Color
+    
+    init(quoteBackground: Color?) {
+        self.quoteBackground = quoteBackground ?? .clear
+    }
+}
+    
+extension QuoteProperties: TextStyle {
+  public func _collectAttributes(in attributes: inout AttributeContainer) {
+      attributes.quoteProperties = self
   }
 }
