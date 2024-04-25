@@ -124,17 +124,21 @@ private struct AttributedStringInlineRenderer {
             for substring in substrings {
                 if let match = regex.firstMatch(in: substring, options: [], range: NSRange(substring.startIndex..., in: substring)) {
                     var modifiedText = regex.stringByReplacingMatches(in: substring, options: [], range: NSRange(location: 0, length: substring.utf16.count), withTemplate: "$1")
+
+                    let fontSize = self.attributes.fontProperties?.size ?? 16
+                    let lineHeight = fontSize * 1.5 // assume it's CJK environment
+
                     let backgroundColor = UIColor(Color(rgba: 0x5D5E67FF))
-                    let backgroundSize = CGSize(width: 20, height: 20) // 背景大小
-                    let circleSize = CGSize(width: 16, height: 16) // 背景大小
+                    let backgroundSize = CGSize(width: fontSize, height: fontSize) // 背景大小
+                    let circleSize = CGSize(width: min(16, lineHeight), height: min(16, lineHeight)) // 背景大小
                     UIGraphicsBeginImageContextWithOptions(backgroundSize, false, 0)
-                    UIColor.clear.setFill()
+
                     let backgroundRect = CGRect(origin: CGPoint(x: (backgroundSize.width - circleSize.width) / 2, y: (backgroundSize.height - circleSize.height) / 2), size: circleSize)
                     let cornerRadius: CGFloat = circleSize.height / 2 // 圆角大小
                     let path = UIBezierPath(roundedRect: backgroundRect, cornerRadius: cornerRadius)
                     backgroundColor.setFill()
                     path.fill()
-                    
+
                     let paragraphStyle = NSMutableParagraphStyle()
                     paragraphStyle.alignment = .center
                     let font = UIFont.systemFont(ofSize: 12)
@@ -147,9 +151,18 @@ private struct AttributedStringInlineRenderer {
                     let backgroundImage = UIGraphicsGetImageFromCurrentImageContext()
                     UIGraphicsEndImageContext()
                     
-                    if let backgroundImage = backgroundImage {
+                    if var backgroundImage = backgroundImage {
+                        if #unavailable(iOS 16.0) {
+                            let baselineOffset = (16 - lineHeight) / 4
+                            let newSize = CGSize(width: backgroundImage.size.width + abs(baselineOffset), height: backgroundImage.size.height)
+                            UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
+                            backgroundImage.draw(in: CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height))
+                            let newImage = UIGraphicsGetImageFromCurrentImageContext() ?? backgroundImage
+                            UIGraphicsEndImageContext()
+                            backgroundImage = newImage
+                        }
                         self.renderResult = self.renderResult + Text(Image(uiImage: backgroundImage))
-                            .baselineOffset(-5)
+                            .baselineOffset((16 - lineHeight) / 4)
                     }
                 } else {
                     var attributeStr = AttributedString(substring, attributes: self.attributes).resolvingFonts()
